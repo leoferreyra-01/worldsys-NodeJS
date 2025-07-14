@@ -1,0 +1,58 @@
+# Node.js Backend Challenge
+
+## Context
+
+You are working on a backend microservice developed in Node.js. This service runs inside a Docker container on a Kubernetes environment with Linux operating system.
+
+The system receives daily a large file (approximately 4 GB) with customer records. Each line of the file represents a separate record. Your objective is to process this file and dump the data into a SQL Server database.
+
+## Objective
+
+Develop a solution that:
+
+1. **Process correctly** the content of the file CLIENTES_IN_0425_FUSIONADO_PROD.dat
+2. **Insert the processed data** into a SQL Server table
+3. **Expose an HTTP endpoint** `/health` that reflects that the service is operational even during processing
+4. **Deliver a technical proposal** that scales for files 5 times larger
+5. **Document the technical decisions** taken
+
+## Expected Delivery
+
+You must deliver:
+
+### Required Components
+- **Complete service source code**
+- **SQL script** to create the destination table
+- **Clear instructions** on how to execute the service (can be with docker-compose, Makefile, etc.)
+- **A document (max. 1 page)** explaining:
+  - What strategies you used and why
+  - What measures you took to ensure performance and robustness
+  - What decisions you made in the face of possible bottlenecks
+  - What you would do differently if this were in production
+
+## Environment Conditions
+
+The service will run in a Kubernetes pod with the following resources:
+
+```yaml
+resources:
+  requests:
+    memory: "128Mi"
+    cpu: "100m"
+  limits:
+    memory: "256Mi"
+    cpu: "200m"
+```
+
+## Rules
+
+- **No modification** of the file is allowed, nor preprocessing outside the service
+- **You must be able to defend** everything implemented during the technical interview
+
+## Extras (not mandatory, but add value)
+
+- **Error tolerance** in corrupted lines of the file
+- **Progress monitoring** or performance
+- **Memory or CPU usage** metrics
+- **Strategy to parallelize** processing or scale horizontally
+- **Use of informative** logs
