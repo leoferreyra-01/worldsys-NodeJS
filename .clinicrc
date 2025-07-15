@@ -1,0 +1,18 @@
+{
+  "doctor": {
+    "duration": 30000,
+    "sampleInterval": 100
+  },
+  "heap": {
+    "duration": 30000,
+    "sampleInterval": 100
+  },
+  "flame": {
+    "duration": 30000,
+    "sampleInterval": 100
+  },
+  "bubbleprof": {
+    "duration": 30000,
+    "sampleInterval": 100
+  }
+} 

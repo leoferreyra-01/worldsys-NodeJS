@@ -6,6 +6,54 @@ You are working on a backend microservice developed in Node.js. This service run
 
 The system receives daily a large file (approximately 4 GB) with customer records. Each line of the file represents a separate record. Your objective is to process this file and dump the data into a SQL Server database.
 
+## Quick Start
+
+### Using Docker Compose (Recommended)
+
+1. **Start the services:**
+   ```bash
+   make docker-up
+   # or just
+   docker-compose up -d
+   ```
+   The API will automatically wait for SQL Server to be ready before starting.
+
+2. **Check service health:**
+   ```bash
+   make health
+   ```
+
+3. **View logs:**
+   ```bash
+   make docker-logs
+   ```
+
+4. **Stop services:**
+   ```bash
+   make docker-down
+   ```
+
+#### Troubleshooting
+- If SQL Server is slow to start, the API will keep retrying until it can connect.
+- If you see connection errors at first, just wait a minute and check logs with `make docker-logs`.
+
+### Manual Setup
+
+1. **Install dependencies:**
+   ```bash
+   make install
+   ```
+
+2. **Set up SQL Server database:**
+   - Install SQL Server locally or use Docker
+   - Run the `database-setup.sql` script
+   - Update environment variables in `.env`
+
+3. **Start development server:**
+   ```bash
+   make dev
+   ```
+
 ## Objective
 
 Develop a solution that:
