@@ -13,6 +13,10 @@ help:
 	@echo "  docker-up   - Start services with Docker Compose"
 	@echo "  docker-down - Stop services with Docker Compose"
 	@echo "  docker-logs - Show Docker logs"
+	@echo "Customer File Processing:"
+	@echo "  test-customers-upload - Test customers file upload and processing"
+	@echo "  test-customers-status - Check customers processing status"
+	@echo "  test-customers-api    - Run complete customers API test suite"
 
 # Install dependencies
 install:
@@ -43,6 +47,7 @@ docker-build:
 	docker-compose build
 
 docker-up:
+	docker-compose build
 	docker-compose up -d
 	@echo ""
 	@echo "🚀 Services are starting up..."
@@ -80,4 +85,26 @@ load-test:
 
 # Health check
 health:
-	curl -f http://localhost:3001/health || echo "Service is not healthy" 
+	curl -f http://localhost:3001/health || echo "Service is not healthy"
+
+# Customer file upload testing
+test-customers-upload:
+	@echo "🧪 Testing customers file upload and processing..."
+	@echo "📁 Uploading a customers file from clients folder..."
+	@curl -X POST http://localhost:3001/customers/upload \
+		-F "file=@clients/CLIENTES_IN_0425_FUSIONADO_PROD_1.dat" \
+		-H "Content-Type: multipart/form-data" || echo "❌ Upload failed - make sure server is running"
+
+test-customers-status:
+	@echo "📋 Checking customers processing status..."
+	@curl -s http://localhost:3001/customers/status | jq . || echo "❌ Failed to get status - make sure server is running"
+
+test-customers-api:
+	@echo "🧪 Running complete customers API test suite..."
+	@echo "1️⃣  Testing customers file upload..."
+	@make test-customers-upload
+	@echo ""
+	@echo "2️⃣  Testing customers status..."
+	@make test-customers-status
+	@echo ""
+	@echo "✅ Customers API test suite completed!" 
