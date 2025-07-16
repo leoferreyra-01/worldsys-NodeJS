@@ -4,13 +4,16 @@ import { TYPES } from "../types/inversify";
 import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import * as path from 'path';
 import * as fs from 'fs';
+import { pipeline } from 'stream/promises';
+import { createWriteStream } from 'fs';
 
 export default async function customerRoutes (fastify: FastifyInstance) {
     const customerService = container.get<ICustomerService>(TYPES.CustomerService);
 
+    // Process customers file by filename
     fastify.post('/customers/:filename', {
         schema: {
-            description: 'Process a customers file',
+            description: 'Process a customers file by filename',
             tags: ['customers'],
             params: {
                 type: 'object',
@@ -47,7 +50,7 @@ export default async function customerRoutes (fastify: FastifyInstance) {
     }, async (request: FastifyRequest<{ Params: { filename: string } }>, reply: FastifyReply) => {
         try{
             const { filename } = request.params;
-            const filePath = path.join(process.cwd(), 'uploads', filename);
+            const filePath = path.join(process.cwd(), 'clients', filename);
 
             if (!fs.existsSync(filePath)) {
                 return reply.status(404).send({ error: 'File not found' });
@@ -62,10 +65,209 @@ export default async function customerRoutes (fastify: FastifyInstance) {
             });
         }catch (error) {
             fastify.log.error('Error processing customers file:', error);
+            fastify.log.error('Error details:', {
+                message: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
             return reply.status(500).send({
                 error: 'Internal server error',
-                message: 'An error occurred while processing the file'
+                message: 'An error occurred while processing the file',
+                details: error instanceof Error ? error.message : String(error)
             });
         }
-    })
+    });
+
+    // Upload and process customers file
+    fastify.post('/customers/upload', {
+        schema: {
+            description: 'Upload and process a customers file',
+            tags: ['customers'],
+            consumes: ['multipart/form-data']
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const data = await (request as any).file();
+            
+            if (!data) {
+                return reply.status(400).send({ error: 'No file uploaded' });
+            }
+
+            // Validate file type
+            const allowedTypes = ['text/plain', 'application/octet-stream', 'text/csv'];
+            if (data.mimetype && !allowedTypes.includes(data.mimetype)) {
+                return reply.status(400).send({ 
+                    error: 'Invalid file type. Please upload a text or CSV file.' 
+                });
+            }
+
+            // Create uploads directory if it doesn't exist
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
+            // Generate unique filename
+            const originalName = data.filename || 'customers-file';
+            const timestamp = Date.now();
+            const filename = `${timestamp}-${originalName}`;
+            const filePath = path.join(uploadsDir, filename);
+
+            // Save the uploaded file
+            const writeStream = createWriteStream(filePath);
+            await pipeline(data.file, writeStream);
+
+            // Process the uploaded file
+            const result = await customerService.processCustomersFile(filePath);
+
+            const stats = fs.statSync(filePath);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'File uploaded and processed successfully',
+                filename: filename,
+                originalName: originalName,
+                filePath: filePath,
+                size: stats.size,
+                processed: result.processed,
+                errors: result.errors
+            });
+
+        } catch (error) {
+            fastify.log.error('Error uploading and processing customers file:', error);
+            fastify.log.error('Error details:', {
+                message: error instanceof Error ? error.message : String(error),
+                stack: error instanceof Error ? error.stack : undefined
+            });
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while uploading and processing the file',
+                details: error instanceof Error ? error.message : String(error)
+            });
+        }
+    });
+
+
+    // Get processing status or list processed files from local folder
+    fastify.get('/customers/status/local', {
+        schema: {
+            description: 'Get customers files from local folder',
+            tags: ['customers'],
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string' },
+                        availableFiles: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    filename: { type: 'string' },
+                                    size: { type: 'number' },
+                                    modified: { type: 'string' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const uploadsDir = path.join(process.cwd(), 'clients');
+            
+            if (!fs.existsSync(uploadsDir)) {
+                return reply.status(200).send({
+                    message: 'No files have been processed yet',
+                    availableFiles: []
+                });
+            }
+
+            const files = fs.readdirSync(uploadsDir)
+                .filter(file => fs.statSync(path.join(uploadsDir, file)).isFile())
+                .map(file => {
+                    const filePath = path.join(uploadsDir, file);
+                    const stats = fs.statSync(filePath);
+                    return {
+                        filename: file,
+                        size: stats.size,
+                        modified: stats.mtime.toISOString()
+                    };
+                });
+
+            return reply.status(200).send({
+                message: 'Available customer files',
+                availableFiles: files
+            });
+
+        } catch (error) {
+            fastify.log.error('Error getting customers status:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while getting status'
+            });
+        }
+    });
+
+    // Get processing status or list processed files from uploaded folder
+    fastify.get('/customers/status/uploaded', {
+        schema: {
+            description: 'Get customers processing status',
+            tags: ['customers'],
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string' },
+                        availableFiles: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    filename: { type: 'string' },
+                                    size: { type: 'number' },
+                                    modified: { type: 'string' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            
+            if (!fs.existsSync(uploadsDir)) {
+                return reply.status(200).send({
+                    message: 'No files have been uploaded yet',
+                    availableFiles: []
+                });
+            }
+
+            const files = fs.readdirSync(uploadsDir)
+                .filter(file => fs.statSync(path.join(uploadsDir, file)).isFile())
+                .map(file => {
+                    const filePath = path.join(uploadsDir, file);
+                    const stats = fs.statSync(filePath);
+                    return {
+                        filename: file,
+                        size: stats.size,
+                        modified: stats.mtime.toISOString()
+                    };
+                });
+
+            return reply.status(200).send({
+                message: 'Available customer files',
+                availableFiles: files
+            });
+
+        } catch (error) {
+            fastify.log.error('Error getting customers status:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while getting status'
+            });
+        }
+    });
 }

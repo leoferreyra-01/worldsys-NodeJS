@@ -31,6 +31,20 @@ const server: FastifyInstance = fastify({
 
 // Register plugins
 async function registerPlugins() {
+  // Register multipart support globally
+  try {
+    await server.register(require('@fastify/multipart'), {
+      limits: {
+        fileSize: 50 * 1024 * 1024, // 50MB limit
+        files: 1 // Only one file at a time
+      }
+    });
+    console.log('✅ Multipart plugin registered globally');
+  } catch (error) {
+    console.log('⚠️  Multipart plugin registration failed:', error instanceof Error ? error.message : String(error));
+    console.log('   File upload functionality will not be available');
+  }
+
   // CORS
   await server.register(cors, {
     origin: true,
@@ -78,7 +92,9 @@ async function registerRoutes() {
   // Add performance monitoring middleware
   server.addHook('onRequest', performanceMonitor.trackRequest());
   
+  console.log('🔧 Registering customer routes...');
   await server.register(customerRoutes);
+  console.log('✅ Customer routes registered');
 }
 
 // Health check endpoint
