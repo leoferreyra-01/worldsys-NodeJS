@@ -146,7 +146,6 @@ export default async function customerRoutes (fastify: FastifyInstance) {
         }
     });
 
-
     // Get processing status or list processed files from local folder
     fastify.get('/customers/status/local', {
         schema: {
@@ -267,6 +266,65 @@ export default async function customerRoutes (fastify: FastifyInstance) {
             return reply.status(500).send({
                 error: 'Internal server error',
                 message: 'An error occurred while getting status'
+            });
+        }
+    });
+
+    //Get customers
+    fastify.get('/customers', {
+        schema: {
+            description: 'Get all customers',
+            tags: ['customers'],
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const customers = await customerService.getCustomers();
+
+            return reply.status(200).send({ customers });
+        } catch (error) {
+            fastify.log.error('Error getting customers:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while getting customers'
+            });
+        }
+    })
+
+    //Get customer by email
+    fastify.get('/customers/email/:email', {
+        schema: {
+            description: 'Get customer by email',
+            tags: ['customers'],
+            params: {
+                type: 'object',
+                properties: {
+                    email: { type: 'string', description: 'The email of the customer' }
+                }
+            },
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        customer: { type: 'object' }
+                    }
+                }
+            }
+        }
+    }, async (request: FastifyRequest<{ Params: { email: string } }>, reply: FastifyReply) => {
+        try {
+            const { email } = request.params;
+            const customer = await customerService.getCustomerByEmail(email);
+
+            if (!customer) {
+                return reply.status(404).send({ error: 'Customer not found' });
+            }
+
+            return reply.status(200).send({ customer });
+        } catch (error) {
+            fastify.log.error('Error getting customer by email:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while getting customer by email'
             });
         }
     });

@@ -29,6 +29,20 @@ export class CustomerService implements ICustomerService {
             try {
                 if (this.validateLine(line)) {
                     const customerData = this.parseLine(line);
+
+                    const existingCustomer = await this.customerRepository.findOne({
+                        where: [
+                            { customerId: customerData.customerId },
+                            { email: customerData.email }
+                        ]
+                    });
+                    
+                    if (existingCustomer) {
+                        errors++;
+                        console.log(`Duplicate customer found: ${customerData.customerId} or ${customerData.email}`);
+                        continue;
+                    }
+
                     const customer = await this.customerRepository.create(customerData);
                     await this.customerRepository.save(customer);
                     processed++;
@@ -80,5 +94,15 @@ export class CustomerService implements ICustomerService {
             email,
             age: parseInt(age)
         }
+    }
+
+    async getCustomers(): Promise<Customer[]> {
+        return this.customerRepository.find();
+    }
+
+    async getCustomerByEmail(email: string): Promise<Customer | null> {
+        return this.customerRepository.findOne({
+            where: { email }
+        });
     }
 }
