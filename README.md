@@ -13,9 +13,6 @@ The system receives daily a large file (approximately 4 GB) with customer record
 1. **Start the services:**
    ```bash
    make docker-up
-   # or just
-   docker-compose build
-   docker-compose up -d
    ```
    The API will automatically wait for SQL Server to be ready before starting and will set up the database table automatically.
 
