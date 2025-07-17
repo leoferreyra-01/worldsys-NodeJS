@@ -13,6 +13,9 @@ The system receives daily a large file (approximately 4 GB) with customer record
 1. **Start the services:**
    ```bash
    make docker-up
+   # or
+   docker-compose build
+   docker-compose up
    ```
    The API will automatically wait for SQL Server to be ready before starting and will set up the database table automatically.
 
@@ -92,3 +95,9 @@ resources:
 - **Memory or CPU usage** metrics
 - **Strategy to parallelize** processing or scale horizontally
 - **Use of informative** logs
+
+---
+
+## Technical Decisions
+
+See [TECHNICAL_DECISIONS.md](./TECHNICAL_DECISIONS.md) for a summary of the main technologies and strategies used in this project, and the rationale behind them.

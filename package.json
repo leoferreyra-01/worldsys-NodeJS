@@ -9,9 +9,9 @@
     "start": "node dist/index.js",
     "test": "jest",
     "typeorm": "typeorm-ts-node-commonjs",
-    "profile:doctor": "clinic doctor -- npm run dev",
-    "profile:all": "npm run profile:heap && npm run profile:flame && npm run profile:bubble",
-    "load:test:all": "autocannon -c 100 -d 30 -m GET,POST,PUT,DELETE http://localhost:3001"
+    "clinic:doctor": "clinic doctor -- node dist/index.js",
+    "clinic:flame": "clinic flame -- node dist/index.js",
+    "clinic:bubbleprof": "clinic bubbleprof -- node dist/index.js"
   },
   "dependencies": {
     "@fastify/cors": "^8.4.0",

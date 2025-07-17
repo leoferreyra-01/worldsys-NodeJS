@@ -91,11 +91,16 @@ export class PerformanceMonitor {
   public getStats() {
     const activeRequests = this.metrics.size;
     const memoryUsage = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    const cpuUsagePercentage = cpuUsage.user / cpuUsage.system;
+    const uptime = process.uptime();
     
     return {
       activeRequests,
       memoryUsage,
-      uptime: process.uptime(),
+      cpuUsage,
+      cpuUsagePercentage,
+      uptime,
       timestamp: new Date().toISOString()
     };
   }

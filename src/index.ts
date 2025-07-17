@@ -132,7 +132,9 @@ server.get('/', {
         properties: {
           message: { type: 'string' },
           version: { type: 'string' },
-          documentation: { type: 'string' }
+          documentation: { type: 'string' },
+          health: { type: 'string' },
+          performance: { type: 'string' }
         }
       }
     }
@@ -141,7 +143,9 @@ server.get('/', {
   return reply.send({
     message: 'Welcome to Fastify API',
     version: '1.0.0',
-    documentation: '/documentation'
+    documentation: '/documentation',
+    health: '/health',
+    performance: '/performance'
   });
 });
 
@@ -165,6 +169,14 @@ server.get('/performance', {
             }
           },
           uptime: { type: 'number' },
+          cpuUsage: {
+            type: 'object',
+            properties: {
+              user: { type: 'number' },
+              system: { type: 'number' }
+            }
+          },
+          cpuUsagePercentage: { type: 'number' },
           timestamp: { type: 'string' }
         }
       }

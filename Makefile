@@ -48,6 +48,7 @@ docker-build:
 	docker-compose build
 
 docker-up:
+	chmod -R a+r ./clients # Make sure the clients folder is readable by the container
 	docker-compose build
 	docker-compose up -d
 	@echo ""
@@ -124,3 +125,13 @@ test-customers-api:
 	@make test-customers-status
 	@echo ""
 	@echo "✅ Customers API test suite completed!" 
+
+# Clinic.js profiling
+clinic-doctor:
+	clinic doctor -- node dist/index.js
+
+clinic-flame:
+	clinic flame -- node dist/index.js
+
+clinic-bubbleprof:
+	clinic bubbleprof -- node dist/index.js 
