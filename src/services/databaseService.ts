@@ -20,4 +20,8 @@ export class DatabaseService implements IDatabaseService {
   getRepository<T extends ObjectLiteral>(entity: any): Repository<T> {
     return this.dataSource.getRepository(entity);
   }
+
+  getDataSource(): DataSource {
+    return this.dataSource;
+  }
 } 

@@ -14,21 +14,29 @@ The system receives daily a large file (approximately 4 GB) with customer record
    ```bash
    make docker-up
    # or just
+   docker-compose build
    docker-compose up -d
    ```
-   The API will automatically wait for SQL Server to be ready before starting.
+   The API will automatically wait for SQL Server to be ready before starting and will set up the database table automatically.
 
-2. **Check service health:**
+2. **Manual database setup (if needed):**
+   ```bash
+   make db-setup
+   # or for manual instructions
+   make db-setup-manual
+   ```
+
+3. **Check service health:**
    ```bash
    make health
    ```
 
-3. **View logs:**
+4. **View logs:**
    ```bash
    make docker-logs
    ```
 
-4. **Stop services:**
+5. **Stop services:**
    ```bash
    make docker-down
    ```
@@ -36,23 +44,6 @@ The system receives daily a large file (approximately 4 GB) with customer record
 #### Troubleshooting
 - If SQL Server is slow to start, the API will keep retrying until it can connect.
 - If you see connection errors at first, just wait a minute and check logs with `make docker-logs`.
-
-### Manual Setup
-
-1. **Install dependencies:**
-   ```bash
-   make install
-   ```
-
-2. **Set up SQL Server database:**
-   - Install SQL Server locally or use Docker
-   - Run the `database-setup.sql` script
-   - Update environment variables in `.env`
-
-3. **Start development server:**
-   ```bash
-   make dev
-   ```
 
 ## Objective
 

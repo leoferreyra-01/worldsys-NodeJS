@@ -1,5 +1,3 @@
-
-
 services:
   # SQL Server Database
   sqlserver:
@@ -14,6 +12,7 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver_data:/var/opt/mssql
+      - ./scripts/database-setup.sql:/tmp/database-setup.sql:ro
     networks:
       - worldsys-network
     healthcheck:

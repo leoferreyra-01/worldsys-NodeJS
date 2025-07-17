@@ -25,6 +25,7 @@ install:
 # Build the application
 build:
 	npm run build
+	cp -r src/services/fileProcessorWorker.js dist/services/fileProcessorWorker.js
 
 # Start in production mode
 start:
@@ -52,7 +53,10 @@ docker-up:
 	@echo ""
 	@echo "🚀 Services are starting up..."
 	@echo "⏳ Waiting for services to be ready..."
-	@sleep 5
+	@sleep 10
+	@echo ""
+	@echo "🗄️  Setting up database..."
+	@make db-setup || echo "⚠️  Database setup failed - you may need to run it manually"
 	@echo ""
 	@echo "✅ Services should now be running!"
 	@echo "🌐 Server started at: http://localhost:3001"
@@ -63,6 +67,7 @@ docker-up:
 	@echo "  make docker-logs    - View logs"
 	@echo "  make docker-down    - Stop services"
 	@echo "  make health         - Check service health"
+	@echo "  make db-setup       - Setup database manually"
 
 docker-down:
 	docker-compose down
@@ -74,7 +79,18 @@ docker-logs:
 db-setup:
 	@echo "Setting up SQL Server database..."
 	@echo "Make sure SQL Server is running and accessible"
-	@echo "You can use the database-setup.sql script to create tables"
+	@echo "Executing database setup script..."
+	@docker exec -i worldsys-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -C -i /tmp/database-setup.sql || echo "❌ Database setup failed - make sure SQL Server is running"
+
+db-setup-manual:
+	@echo "📋 Manual database setup instructions:"
+	@echo "1. Connect to SQL Server:"
+	@echo "   docker exec -it worldsys-sqlserver /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -C"
+	@echo ""
+	@echo "2. Run the setup script:"
+	@echo "   :r /tmp/database-setup.sql"
+	@echo ""
+	@echo "3. Or copy and paste the contents of scripts/database-setup.sql"
 
 # Performance testing
 perf-test:

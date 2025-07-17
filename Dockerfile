@@ -15,6 +15,9 @@ COPY . .
 # Build the application
 RUN npm run build
 
+# Copy fileProcessorWorker.js
+COPY src/services/fileProcessorWorker.js dist/services/fileProcessorWorker.js
+
 # Production stage
 FROM node:18-alpine AS production
 

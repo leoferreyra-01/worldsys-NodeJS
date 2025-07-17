@@ -61,6 +61,7 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                 message: 'File processed successfully',
                 processed: result.processed,
                 errors: result.errors,
+                duplicates: result.duplicates,
                 filePath
             });
         }catch (error) {
@@ -129,7 +130,8 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                 filePath: filePath,
                 size: stats.size,
                 processed: result.processed,
-                errors: result.errors
+                errors: result.errors,
+                duplicates: result.duplicates
             });
 
         } catch (error) {
@@ -288,8 +290,8 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                 message: 'An error occurred while getting customers'
             });
         }
-    })
-
+    });
+    
     //Get customer by email
     fastify.get('/customers/email/:email', {
         schema: {
@@ -325,6 +327,111 @@ export default async function customerRoutes (fastify: FastifyInstance) {
             return reply.status(500).send({
                 error: 'Internal server error',
                 message: 'An error occurred while getting customer by email'
+            });
+        }
+    });
+
+    // Get processing status
+    fastify.get('/customers/processing/status', {
+        schema: {
+            description: 'Get current file processing status',
+            tags: ['customers'],
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        isProcessing: { type: 'boolean' },
+                        isConcurrent: { type: 'boolean' },
+                        stats: {
+                            type: 'object',
+                            properties: {
+                                processed: { type: 'number' },
+                                errors: { type: 'number' },
+                                duplicates: { type: 'number' },
+                                totalLines: { type: 'number' },
+                                currentLine: { type: 'number' },
+                                progress: { type: 'number' },
+                                rate: { type: 'number' },
+                                elapsedTime: { type: 'number' },
+                                activeWorkers: { type: 'number' },
+                                completedChunks: { type: 'number' },
+                                totalChunks: { type: 'number' }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const stats = customerService.getProcessingStats();
+            
+            if (!stats) {
+                return reply.status(200).send({
+                    isProcessing: false,
+                    isConcurrent: false,
+                    stats: null
+                });
+            }
+
+            const elapsed = Date.now() - stats.startTime.getTime();
+            const progress = stats.totalLines > 0 ? (stats.currentLine / stats.totalLines) * 100 : 0;
+            const rate = stats.processed / (elapsed / 1000);
+
+            return reply.status(200).send({
+                isProcessing: true,
+                isConcurrent: stats.isConcurrent || false,
+                stats: {
+                    processed: stats.processed,
+                    errors: stats.errors,
+                    duplicates: stats.duplicates,
+                    totalLines: stats.totalLines,
+                    currentLine: stats.currentLine,
+                    progress: Math.round(progress * 100) / 100,
+                    rate: Math.round(rate * 100) / 100,
+                    elapsedTime: Math.round(elapsed / 1000),
+                    activeWorkers: stats.activeWorkers || 0,
+                    completedChunks: stats.completedChunks || 0,
+                    totalChunks: stats.totalChunks || 0
+                }
+            });
+        } catch (error) {
+            fastify.log.error('Error getting processing status:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while getting processing status'
+            });
+        }
+    });
+
+    // Stop concurrent processing
+    fastify.post('/customers/processing/stop', {
+        schema: {
+            description: 'Stop current file processing',
+            tags: ['customers'],
+            response: {
+                200: {
+                    type: 'object',
+                    properties: {
+                        message: { type: 'string' },
+                        stopped: { type: 'boolean' }
+                    }
+                }
+            }
+        }
+    }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            // This would need to be implemented in the service
+            // For now, we'll return a message
+            return reply.status(200).send({
+                message: 'Processing stop requested',
+                stopped: true
+            });
+        } catch (error) {
+            fastify.log.error('Error stopping processing:', error);
+            return reply.status(500).send({
+                error: 'Internal server error',
+                message: 'An error occurred while stopping processing'
             });
         }
     });

@@ -14,10 +14,20 @@ export const AppDataSource = new DataSource({
     enableArithAbort: true,
   },
   synchronize: process.env.NODE_ENV !== 'production', // Auto-create tables in development
-  logging: true,
+  logging: process.env.NODE_ENV === 'development',
   entities: [Customer],
   subscribers: [],
   migrations: [],
+  // Connection pooling settings for large file processing
+  extra: {
+    connectionLimit: 20,
+    acquireTimeout: 60000,
+    timeout: 60000,
+    reconnect: true,
+  },
+  // TypeORM specific settings
+  maxQueryExecutionTime: 30000, // 30 seconds
+  cache: false, // Disable caching for large operations
 });
 
 // Initialize database connection
@@ -25,6 +35,9 @@ export const initializeDatabase = async () => {
   try {
     await AppDataSource.initialize();
     console.log('✅ Database connected successfully');
+    
+    // Log connection pool info
+    console.log(`📊 Database pool settings: max connections = ${AppDataSource.options.extra?.connectionLimit || 'default'}`);
   } catch (error) {
     console.error('❌ Database connection failed:', error);
     throw error;
