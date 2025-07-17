@@ -37,6 +37,7 @@ If this project were to be deployed in a real-world production environment, the 
 - **Robust Error Handling & Retries**: Implement retry and backoff strategies for transient errors (e.g., database or network issues), and ensure failed records are logged and can be reprocessed safely.
 - **Security Hardening**: Store secrets and configuration securely (e.g., environment variables, secret managers), enable HTTPS, validate all inputs strictly, and follow least-privilege principles for database and network access.
 - **Cloud-Native Storage & Processing**: For very large files, use cloud storage solutions (e.g., AWS S3, Azure Blob Storage) and consider serverless or distributed processing frameworks to handle spikes in load and very large datasets efficiently.
+- **Increase the Concurrency Threshold**: The threshold is set to 5000 lines for testing purposes. I would make it larger (or control it through environment variables) so it starts using the concurrency method only when it is really necessary.
 
 ---
 
