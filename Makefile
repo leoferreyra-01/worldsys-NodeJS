@@ -83,7 +83,7 @@ docker-up:
 
 docker-down:
 	docker-compose down
-	docker volume rm worldsys-sqlserver_sqlserver_data
+	docker volume rm worldsys-nodejs_sqlserver_data
 
 docker-logs:
 	docker-compose logs -f
