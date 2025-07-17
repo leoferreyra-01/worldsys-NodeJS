@@ -29,20 +29,27 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                 200: {
                     type: 'object',
                     properties: {
+                        message: { type: 'string' },
                         processed: { type: 'number' },
-                        errors: { type: 'number' }
+                        errors: { type: 'number' },
+                        duplicates: { type: 'number' },
+                        filePath: { type: 'string' }
                     }
                 },
                 400: {
                     type: 'object',
                     properties: {
-                        error: { type: 'string' }
+                        error: { type: 'string' },
+                        message: {type: 'string'},
+                        details: {type: 'string'}
                     }
                 },
                 404: {
                     type: 'object',
                     properties: {
-                        error: { type: 'string' }
+                        error: { type: 'string' },
+                        message: {type: 'string'},
+                        details: {type: 'string'}
                     }
                 }
             }
@@ -148,130 +155,6 @@ export default async function customerRoutes (fastify: FastifyInstance) {
         }
     });
 
-    // Get processing status or list processed files from local folder
-    fastify.get('/customers/status/local', {
-        schema: {
-            description: 'Get customers files from local folder',
-            tags: ['customers'],
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        message: { type: 'string' },
-                        availableFiles: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    filename: { type: 'string' },
-                                    size: { type: 'number' },
-                                    modified: { type: 'string' }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }, async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            const uploadsDir = path.join(process.cwd(), 'clients');
-            
-            if (!fs.existsSync(uploadsDir)) {
-                return reply.status(200).send({
-                    message: 'No files have been processed yet',
-                    availableFiles: []
-                });
-            }
-
-            const files = fs.readdirSync(uploadsDir)
-                .filter(file => fs.statSync(path.join(uploadsDir, file)).isFile())
-                .map(file => {
-                    const filePath = path.join(uploadsDir, file);
-                    const stats = fs.statSync(filePath);
-                    return {
-                        filename: file,
-                        size: stats.size,
-                        modified: stats.mtime.toISOString()
-                    };
-                });
-
-            return reply.status(200).send({
-                message: 'Available customer files',
-                availableFiles: files
-            });
-
-        } catch (error) {
-            fastify.log.error('Error getting customers status:', error);
-            return reply.status(500).send({
-                error: 'Internal server error',
-                message: 'An error occurred while getting status'
-            });
-        }
-    });
-
-    // Get processing status or list processed files from uploaded folder
-    fastify.get('/customers/status/uploaded', {
-        schema: {
-            description: 'Get customers processing status',
-            tags: ['customers'],
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        message: { type: 'string' },
-                        availableFiles: {
-                            type: 'array',
-                            items: {
-                                type: 'object',
-                                properties: {
-                                    filename: { type: 'string' },
-                                    size: { type: 'number' },
-                                    modified: { type: 'string' }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }, async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            const uploadsDir = path.join(process.cwd(), 'uploads');
-            
-            if (!fs.existsSync(uploadsDir)) {
-                return reply.status(200).send({
-                    message: 'No files have been uploaded yet',
-                    availableFiles: []
-                });
-            }
-
-            const files = fs.readdirSync(uploadsDir)
-                .filter(file => fs.statSync(path.join(uploadsDir, file)).isFile())
-                .map(file => {
-                    const filePath = path.join(uploadsDir, file);
-                    const stats = fs.statSync(filePath);
-                    return {
-                        filename: file,
-                        size: stats.size,
-                        modified: stats.mtime.toISOString()
-                    };
-                });
-
-            return reply.status(200).send({
-                message: 'Available customer files',
-                availableFiles: files
-            });
-
-        } catch (error) {
-            fastify.log.error('Error getting customers status:', error);
-            return reply.status(500).send({
-                error: 'Internal server error',
-                message: 'An error occurred while getting status'
-            });
-        }
-    });
-
     //Get customers
     fastify.get('/customers', {
         schema: {
@@ -301,14 +184,6 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                 type: 'object',
                 properties: {
                     email: { type: 'string', description: 'The email of the customer' }
-                }
-            },
-            response: {
-                200: {
-                    type: 'object',
-                    properties: {
-                        customer: { type: 'object' }
-                    }
                 }
             }
         }
@@ -343,7 +218,7 @@ export default async function customerRoutes (fastify: FastifyInstance) {
                         isProcessing: { type: 'boolean' },
                         isConcurrent: { type: 'boolean' },
                         stats: {
-                            type: 'object',
+                            type: ['object', 'null'],
                             properties: {
                                 processed: { type: 'number' },
                                 errors: { type: 'number' },
@@ -365,7 +240,7 @@ export default async function customerRoutes (fastify: FastifyInstance) {
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const stats = customerService.getProcessingStats();
-            
+
             if (!stats) {
                 return reply.status(200).send({
                     isProcessing: false,

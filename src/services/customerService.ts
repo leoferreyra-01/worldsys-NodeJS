@@ -22,17 +22,17 @@ export class CustomerService implements ICustomerService {
     private customerRepository: Repository<Customer>;
     private processingStats: ProcessingStats | null = null;
     private readonly BATCH_SIZE = 100; // Process 100 records at a time
-    private readonly CONCURRENT_THRESHOLD = 1000; // Use concurrent processing for files with more than 1k lines
+    private readonly CONCURRENT_THRESHOLD = 5000; // Use concurrent processing for files with more than 5k lines
     private concurrentProcessor: ConcurrentProcessor;
 
     constructor(
         @inject(TYPES.DatabaseService) private databaseService: IDatabaseService
     ) {
         this.customerRepository = this.databaseService.getRepository(Customer);
-        this.concurrentProcessor = new ConcurrentProcessor(4, 10000); // 4 workers, 10k lines per chunk
+        this.concurrentProcessor = new ConcurrentProcessor(4, 1000); // 4 workers, 1k lines per chunk
     }
 
-    async processCustomersFile(filePath: string): Promise<{ processed: number; errors: number; duplicates: number }> {
+    async processCustomersFile(filePath: string): Promise<{ processed: number; errors: number; duplicates: number; filePath: string }> {
         // Check file size to decide processing method
         const fileStats = fs.statSync(filePath);
         const estimatedLines = Math.ceil(fileStats.size / 50); // Rough estimate: ~50 bytes per line
@@ -46,7 +46,7 @@ export class CustomerService implements ICustomerService {
         }
     }
 
-    private async processFileConcurrently(filePath: string): Promise<{ processed: number; errors: number; duplicates: number }> {
+    private async processFileConcurrently(filePath: string): Promise<{ processed: number; errors: number; duplicates: number; filePath: string }> {
         // Set up progress monitoring
         this.concurrentProcessor.on('progress', (stats: ConcurrentProcessingStats) => {
             this.processingStats = {
@@ -62,14 +62,19 @@ export class CustomerService implements ICustomerService {
 
         try {
             const result = await this.concurrentProcessor.processFileConcurrently(filePath);
-            return result;
+            return {
+                processed: result.processed,
+                errors: result.errors,
+                duplicates: result.duplicates,
+                filePath
+            };
         } catch (error) {
             console.error('Error in concurrent processing:', error);
             throw error;
         }
     }
 
-    private async processFileSequentially(filePath: string): Promise<{ processed: number; errors: number; duplicates: number }> {
+    private async processFileSequentially(filePath: string): Promise<{ processed: number; errors: number; duplicates: number; filePath: string }> {
         // Initialize processing stats
         this.processingStats = {
             processed: 0,
@@ -143,7 +148,7 @@ export class CustomerService implements ICustomerService {
             }
 
             this.logFinalStats();
-            return { processed, errors, duplicates };
+            return { processed, errors, duplicates, filePath };
 
         } catch (error) {
             console.error('Error during file processing:', error);

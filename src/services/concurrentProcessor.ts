@@ -39,7 +39,7 @@ export class ConcurrentProcessor extends EventEmitter {
     private processingStats: ConcurrentProcessingStats;
     private isProcessing: boolean = false;
 
-    constructor(maxWorkers: number = 4, chunkSize: number = 5250) {
+    constructor(maxWorkers: number = 4, chunkSize: number = 1000) {
         super();
         this.maxWorkers = maxWorkers;
         this.chunkSize = chunkSize;
