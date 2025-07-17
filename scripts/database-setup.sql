@@ -4,6 +4,11 @@
 USE master;
 GO
 
+-- Drop the customers table if it exists
+IF OBJECT_ID('dbo.customers', 'U') IS NOT NULL
+    DROP TABLE dbo.customers;
+GO
+
 -- Create the customers table
 CREATE TABLE customers (
     id INT IDENTITY(1,1) PRIMARY KEY,
