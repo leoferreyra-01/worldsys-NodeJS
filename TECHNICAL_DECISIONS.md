@@ -32,6 +32,7 @@ This document summarizes the main technology choices and strategies used in this
 
 If this project were to be deployed in a real-world production environment, the following improvements and practices would be considered:
 
+- **Appropriate Kubernetes Resource Requests/Limits**: For production, set higher memory and CPU requests/limits for the pod (e.g., 512Mi–1Gi memory and 0.5–1 CPU) to avoid OOMKills and throttling, especially when processing large files.
 - **Advanced Monitoring & Tracing**: Integrate distributed tracing (e.g., OpenTelemetry) and advanced monitoring (e.g., Prometheus, Grafana) to track performance, detect bottlenecks, and quickly diagnose issues in production.
 - **Message Queue for File Processing**: Use a message queue (e.g., RabbitMQ, Kafka) to decouple file upload from processing, enabling better load balancing, retry mechanisms, and horizontal scaling of workers.
 - **Robust Error Handling & Retries**: Implement retry and backoff strategies for transient errors (e.g., database or network issues), and ensure failed records are logged and can be reprocessed safely.
