@@ -8,7 +8,7 @@ The system receives daily a large file (approximately 4 GB) with customer record
 
 ## Quick Start
 
-### Using Docker Compose (Recommended)
+### Using Docker Compose with Makefile (Recommended)
 
 1. **Start the services:**
    ```bash
@@ -19,7 +19,7 @@ The system receives daily a large file (approximately 4 GB) with customer record
    ```
    The API will automatically wait for SQL Server to be ready before starting and will set up the database table automatically.
 
-2. **Manual database setup (if needed):**
+2. **Manual database setup (if needed, you can probably skip this one):**
    ```bash
    make db-setup
    # or for manual instructions
@@ -39,6 +39,12 @@ The system receives daily a large file (approximately 4 GB) with customer record
 5. **Stop services:**
    ```bash
    make docker-down
+   ```
+
+6. **Run test (doesn't need the docker up and running):**
+   ```bash
+   make install
+   make test
    ```
 
 #### Troubleshooting
