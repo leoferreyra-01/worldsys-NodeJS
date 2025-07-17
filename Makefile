@@ -43,13 +43,22 @@ test:
 clean:
 	rm -rf dist node_modules package-lock.json
 
+# Fix permissions for scripts and database setup file
+fix-permissions:
+	chmod 755 ./scripts
+	chmod 644 ./scripts/database-setup.sql
+
+# Fix permissions for all files in the clients folder
+fix-clients-permissions:
+	chmod -R a+r ./clients
+
 # Docker commands
 docker-build:
 	docker-compose build
 
 docker-up:
-	chmod -R a+r ./scripts # Make sure the scripts folder is readable by the container
-	chmod -R a+r ./clients # Make sure the clients folder is readable by the container
+	make fix-permissions
+	make fix-clients-permissions
 	docker-compose build
 	docker-compose up -d
 	@echo ""
