@@ -48,6 +48,7 @@ docker-build:
 	docker-compose build
 
 docker-up:
+	chmod -R a+r ./scripts # Make sure the scripts folder is readable by the container
 	chmod -R a+r ./clients # Make sure the clients folder is readable by the container
 	docker-compose build
 	docker-compose up -d
