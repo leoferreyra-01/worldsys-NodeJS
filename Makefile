@@ -64,6 +64,7 @@ docker-up:
 	@echo "🌐 Server started at: http://localhost:3001"
 	@echo "📚 Reach http://localhost:3001/documentation for more info about the endpoints"
 	@echo "💚 Health check: http://localhost:3001/health"
+	@echo "💚 Performance check: http://localhost:3001/performance"
 	@echo ""
 	@echo "📋 Useful commands:"
 	@echo "  make docker-logs    - View logs"
